@@ -22,7 +22,7 @@ services:
   cadvisor:
     image: google/cadvisor:latest
     container_name: cadvisor
-    command: --privileged
+    privileged: true
     restart: always
     ports:
       - 8080:8080

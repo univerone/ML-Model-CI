@@ -22,15 +22,18 @@ services:
   cadvisor:
     image: google/cadvisor:latest
     container_name: cadvisor
-    command: --privileged
+    privileged: true
     restart: always
     ports:
       - 8080:8080
+    environment:
+      LD_LIBRARY_PATH: /usr/lib
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+      - /usr/lib/libnvidia-ml.so.1:/usr/lib/libnvidia-ml.so.1
     networks:
       - modelci
 
