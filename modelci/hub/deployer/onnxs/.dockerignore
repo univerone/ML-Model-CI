@@ -2,6 +2,7 @@ model/
 .dockerignore
 .gitignore
 onnx-serve-cpu.Dockerfile
-onnx-serve-gpu.Dockerfile
+onnx-serve-cuda10.2.Dockerfile
 deploy_model_cpu.sh
+deploy_model_gpu.sh
 README.md

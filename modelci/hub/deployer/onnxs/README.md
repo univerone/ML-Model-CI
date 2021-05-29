@@ -8,19 +8,57 @@ Road map
 - [ ] API test script and gRPC test script  
 - [ ] API and gRPC test with profiling  
 
-## Install
+## Prerequisites
 
 ```shell script
 cp ../config/utils.py .
 cp ../config/docker-env.env.example ./docker-env.env
 
 # Generate gRPC code
+pip install grpc_tools
 python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. proto/service.proto
+```
 
-# Build Docker
-docker build -t onnx-serving:latest -f onnx-serve-cpu.Dockerfile .  
-# For GPU version, use onnx-serve-gpu.Dockerfile instead, tag GPU version as onnx-serving:latest-gpu
-# docker build -t onnx-serving:latest-gpu -f onnx-serve-gpu.Dockerfile .
+## Build Docker
+
+### For CPU verison
+####  Build the compile stage
+
+```shell script
+docker build --target compile-image \
+       --cache-from=onnx-compile:cpu \
+       --tag onnx-compile:cpu \
+       --file onnx-serve-cpu.Dockerfile .
+```
+
+#### Build the runtime stage, using cached compile stage:
+
+```shell script
+docker build --target build-image \
+       --cache-from=onnx-compile:cpu \
+       --cache-from=onnx-serving:cpu \
+       --tag onnx-serving:cpu \
+       --file onnx-serve-cpu.Dockerfile .
+```
+
+### For GPU version
+use onnx-serve-cuda10.2.Dockerfile instead, tag GPU version as onnx-serving:cuda10.2
+####  Build the compile stage
+```shell script
+docker build --target compile-image \
+       --cache-from=onnx-compile:cpu \
+       --tag onnx-compile:cpu \
+       --file onnx-serve-cpu.Dockerfile .
+```
+#### Build the runtime stage
+using cached compile stage
+
+```shell script
+docker build --target build-image \
+       --cache-from=onnx-compile:cuda10.2 \
+       --cache-from=onnx-serving:cuda10.2 \
+       --tag onnx-serving:cpu \
+       --file onnx-serve-cuda10.2.Dockerfile .
 ```
 
 ## Usage

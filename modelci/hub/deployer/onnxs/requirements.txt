@@ -1,0 +1,4 @@
+grpcio>=1.27.2
+grpcio-tools>=1.27.2
+onnx==1.6.0
+toolz==0.10.0

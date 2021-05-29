@@ -1,31 +1,27 @@
-FROM continuumio/miniconda
+FROM python:3.7-slim AS compile-image
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends\
+  build-essential \
+  gcc
 
-# set system environment
-ENV CONDA_ROOT=/opt/conda
-ENV CONDA_PREFIX=${CONDA_ROOT}
-ENV PATH=$CONDA_PREFIX/bin:$PATH
-ENV CONDA_AUTO_UPDATE_CONDA=false
-ENV MODEL_NAME='model'
-ENV LC_ALL=C.UTF-8
-ENV LANG=C.UTF-8
 
+# Use venv
+ENV VIRTUAL_ENV=/venv
+RUN python -m venv $VIRTUAL_ENV
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+# Install dependencies
 COPY . /content/
 
-WORKDIR /content/
+WORKDIR /content
+RUN pip install --no-cache-dir pip -U \
+ && pip install -r requirements.txt \
+ && pip install onnxruntime==1.6.0
 
-# install build dependencies
-RUN apt-get update -y \
- && apt-get install -y libc-dev gcc
+FROM python:3.7-slim AS build-image
+COPY --from=compile-image /venv /venv
 
-# install conda environment
-RUN conda env update --name base --file /content/environment.yml \
- && conda clean -ayf \
- && pip install onnxruntime==1.2.0 \
- && rm -rf ~/.cache/pip
-RUN find ${CONDA_ROOT}/ -follow -type f -name '*.a' -delete 2> /dev/null; exit 0 \
- && find ${CONDA_ROOT}/ -follow -type f -name '*.pyc' -delete 2> /dev/null; exit 0 \
- && find ${CONDA_ROOT}/ -follow -type f -name '*.js.map' -delete 2> /dev/null; exit 0 \
- && find ${CONDA_ROOT}/lib/python*/site-packages/bokeh/server/static \
-     -follow -type f -name '*.js' ! -name '*.min.js' -delete 2> /dev/null; exit 0
-
+ENV PATH="/venv/bin:$PATH"
+COPY . /content
+WORKDIR /content
 CMD python onnx_serve.py ${MODEL_NAME}
